@@ -8,9 +8,15 @@ new mongoose.Schema({
         ref:"User"
     },
 
+
     imageUrl:String,
 
     wasteType:String,
+
+    confidence: {
+        type: Number,
+        default: 0
+    },
 
     category:String,
 

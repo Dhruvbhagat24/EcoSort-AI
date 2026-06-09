@@ -1,14 +1,14 @@
-const cloudinary = require("../config/cloudinary");
 const WasteAnalysis = require("../models/WasteAnalysis");
 
-const analyzeWasteImage =
-require("../services/geminiService");
+const predictWaste =
+require("../services/mlService");
+
+const wasteInfo =
+require("../data/wasteInfo");
 
 exports.analyzeWaste = async (req, res) => {
 
     try {
-
-        console.log("FILE RECEIVED:", req.file?.originalname);
 
         if (!req.file) {
             return res.status(400).json({
@@ -16,58 +16,72 @@ exports.analyzeWaste = async (req, res) => {
             });
         }
 
-        const imageBase64 =
-            req.file.buffer.toString("base64");
+        const prediction =
+            await predictWaste(
+                req.file.buffer
+            );
 
-        console.log("Calling Gemini...");
+        console.log(
+            "Prediction:",
+            prediction
+        );
 
-        const geminiResult =
-            await analyzeWasteImage(imageBase64);
+        const info =
+            wasteInfo[
+                prediction.category
+            ];
 
-        console.log("Gemini Result:");
-        console.log(geminiResult);
-
-        let analysis;
-
-        try {
-            const cleanResult = geminiResult
-                .replace(/```json/g, "")
-                .replace(/```/g, "")
-                .trim();
-
-            analysis = JSON.parse(cleanResult);
-        }
-        catch (err) {
-            return res.status(500).json({
-                message: "Invalid Gemini JSON",
-                data: geminiResult
+        if (!info) {
+            return res.status(400).json({
+                message:
+                `No mapping found for ${prediction.category}`
             });
         }
 
         const saved =
             await WasteAnalysis.create({
-                userId: req.user.id,
-                wasteType: analysis.wasteType,
-                category: analysis.category,
-                recyclable: analysis.recyclable,
-                ecoScore: analysis.ecoScore,
-                disposalMethod: analysis.disposalMethod,
-                environmentalImpact: analysis.environmentalImpact,
-                recommendations: analysis.recommendations
+
+                userId:
+                    req.user.id,
+
+                wasteType:
+                    prediction.category,
+
+                category:
+                    prediction.category,
+
+                confidence:
+                    prediction.confidence,
+
+                recyclable:
+                    info.recyclable,
+
+                ecoScore:
+                    info.ecoScore,
+
+                disposalMethod:
+                    info.disposalMethod,
+
+                environmentalImpact:
+                    info.environmentalImpact,
+
+                recommendations:
+                    info.recommendations
             });
 
         res.status(200).json(saved);
 
     }
-    catch (error) {
+    catch(error){
 
         console.error(error);
 
         res.status(500).json({
-            message: error.message
+            message:error.message
         });
 
     }
+
 };
 
 exports.getHistory = async (req, res) => {
@@ -109,31 +123,31 @@ exports.getStats = async (req, res) => {
         const plastic =
             analyses.filter(
                 item =>
-                item.category === "Plastic"
+                item.category === "plastic"
             ).length;
 
         const paper =
             analyses.filter(
                 item =>
-                item.category === "Paper"
+                item.category === "paper"
             ).length;
 
         const metal =
             analyses.filter(
                 item =>
-                item.category === "Metal"
+                item.category === "metal"
             ).length;
 
         const glass =
             analyses.filter(
                 item =>
-                item.category === "Glass"
+                item.category === "glass"
             ).length;
 
         const organic =
             analyses.filter(
                 item =>
-                item.category === "Organic"
+                item.category === "organic"
             ).length;
 
         const averageEcoScore =
