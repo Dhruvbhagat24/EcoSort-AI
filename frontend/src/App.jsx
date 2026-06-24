@@ -9,41 +9,53 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ScanWaste from "./pages/ScanWaste";
 import History from "./pages/History";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedLayout from "./components/ProtectedLayout";
 
 function App() {
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-      <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout>
+                  <Dashboard />
+                </ProtectedLayout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/"
-          element={<Login />}
-        />
+          <Route
+            path="/scan"
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout>
+                  <ScanWaste />
+                </ProtectedLayout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
-
-        <Route
-          path="/scan"
-          element={<ScanWaste />}
-        />
-
-        <Route
-          path="/history"
-          element={<History />}
-        />
-
-      </Routes>
-
-    </BrowserRouter>
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout>
+                  <History />
+                </ProtectedLayout>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -16,4 +16,15 @@ API.interceptors.request.use((req) => {
     return req;
 });
 
+export const analyzeWaste = (formData) =>
+    API.post("/waste/analyze", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+
+export const getWasteStats = () => API.get("/waste/stats");
+
+export const getWasteHistory = () => API.get("/waste/history");
+
+export const getRecentScans = () => API.get("/waste/recent");
+
 export default API;

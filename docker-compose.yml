@@ -1,0 +1,52 @@
+services:
+
+  mongodb:
+    image: mongo
+    container_name: ecosort-mongo
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongo_data:/data/db
+
+  ml-service:
+    build: ./ML-Service
+
+    container_name: ecosort-ml
+
+    ports:
+      - "8000:8000"
+
+  backend:
+    build: ./Backend
+
+    container_name: ecosort-backend
+
+    ports:
+      - "5000:5000"
+
+    depends_on:
+      - mongodb
+      - ml-service
+
+    env_file:
+      - ./Backend/.env
+
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/ecosort
+      ML_SERVICE_URL: http://ml-service:8000/predict
+
+  frontend:
+    build: ./frontend
+
+    container_name: ecosort-frontend
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
